@@ -1,0 +1,100 @@
+CS5573 Smart Reminder - PythonAnywhere Access and Update Notes
+===============================================================
+
+Shared project links
+--------------------
+GitHub repository:
+https://github.com/SebastianKlemkosky/CS5573-Final-Project-Smart-Reminder
+
+Live site:
+https://cc5823utsa.pythonanywhere.com
+
+PythonAnywhere account
+----------------------
+Check Discord
+
+
+
+Important:
+Do not store the real password in GitHub or public files.
+If the password changes, update this file privately and reshare it only with the group.
+
+How to log in to PythonAnywhere
+-------------------------------
+1. Go to https://www.pythonanywhere.com
+2. Click Log in
+3. Enter the shared username or email
+4. Enter the shared password
+5. Open the Web tab to reload the site after updates
+6. Open a Bash console when you need to pull the latest code from GitHub
+
+Normal update workflow
+----------------------
+1. Make changes locally in VS Code
+2. Test locally if needed
+3. Push changes to GitHub
+4. Log in to PythonAnywhere
+5. Open a Bash console
+6. Pull the latest code
+7. Reload the web app from the Web tab
+
+How to update PythonAnywhere after GitHub changes
+-------------------------------------------------
+In a PythonAnywhere Bash console, run:
+
+cd ~/CS5573-Final-Project-Smart-Reminder
+git reset --hard HEAD
+git pull
+
+Then:
+- go to the Web tab
+- click Reload
+
+Why use git reset --hard HEAD first?
+------------------------------------
+Sometimes PythonAnywhere has local changes to app.py or other files.
+That can block git pull.
+Running git reset --hard HEAD clears those tracked local changes so the server matches GitHub.
+
+Warning:
+This deletes tracked local changes on PythonAnywhere.
+Do not run it if you made important edits directly on PythonAnywhere that are not in GitHub.
+
+Useful check commands
+---------------------
+Check repo status:
+git status
+
+Check current folder:
+pwd
+
+See files:
+ls
+
+If git pull fails because of local changes
+------------------------------------------
+Option 1: safest, inspect first
+git status
+git diff app.py
+
+Option 2: overwrite server copy with GitHub version
+git reset --hard HEAD
+git pull
+
+WSGI/web app notes
+------------------
+PythonAnywhere username: cc5823utsa
+Project folder:
+/home/cc5823utsa/CS5573-Final-Project-Smart-Reminder
+
+WSGI import used:
+from app import app as application
+
+
+Last note
+---------
+If the site stops working, check:
+1. Web tab error log
+2. WSGI file
+3. Bash console git status
+4. Whether the latest changes were pulled
