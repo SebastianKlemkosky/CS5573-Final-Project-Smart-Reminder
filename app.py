@@ -4,4 +4,7 @@ app = Flask(__name__)
 
 @app.route("/")
 def home():
-    return "<h1>Hello World</h1><p>Smart Reminder is running on Google App Engine.</p>"
+    return "<h1>Hello World</h1><p>Smart Reminder is running2.</p>"
+
+if __name__ == "__main__":
+    app.run()
