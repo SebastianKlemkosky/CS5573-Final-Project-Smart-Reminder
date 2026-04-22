@@ -7,7 +7,7 @@ GitHub repository:
 https://github.com/SebastianKlemkosky/CS5573-Final-Project-Smart-Reminder
 
 Live site:
-https://cc5823utsa.pythonanywhere.com
+https://cc5523utsa.pythonanywhere.com
 
 PythonAnywhere account
 ----------------------
