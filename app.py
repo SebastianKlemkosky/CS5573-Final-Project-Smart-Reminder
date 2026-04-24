@@ -134,7 +134,6 @@ def view_reminders():
     return render_template("view_reminders.html", reminders=reminders)
 
 
-
 if __name__ == "__main__":
     create_database()
     app.run(debug=True)
