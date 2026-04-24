@@ -11,14 +11,105 @@
     <div class="container">
         <h1>Add Reminder</h1>
 
-        <p>
-            This page will be used to add new reminders.
-            The form functionality will be added next.
-        </p>
+        <p>Select a reminder type and fill out the form below.</p>
 
-        <div class="button-group">
-            <a href="/" class="btn">Back to Home</a>
-        </div>
+        <form method="POST" action="/add">
+            <input type="hidden" id="device_id" name="device_id">
+
+            <label for="form_type">Reminder Type</label>
+            <select id="form_type" name="form_type" onchange="showFormFields()">
+                <option value="general">General</option>
+                <option value="health">Health</option>
+                <option value="fitness">Fitness</option>
+                <option value="work">Work</option>
+                <option value="relationships">Relationships</option>
+            </select>
+
+            <label for="title">Reminder Title</label>
+            <input type="text" id="title" name="title" placeholder="Example: Finish homework" required>
+
+            <label for="description">Description</label>
+            <textarea id="description" name="description" placeholder="Add reminder details"></textarea>
+
+            <label for="reminder_date">Date</label>
+            <input type="date" id="reminder_date" name="reminder_date">
+
+            <label for="reminder_time">Time</label>
+            <input type="time" id="reminder_time" name="reminder_time">
+
+            <label for="priority">Priority</label>
+            <select id="priority" name="priority">
+                <option value="Low">Low</option>
+                <option value="Medium" selected>Medium</option>
+                <option value="High">High</option>
+            </select>
+
+            <div id="health-fields" class="extra-fields">
+                <h2>Health Details</h2>
+
+                <label for="health_type">Health Reminder Type</label>
+                <input type="text" id="health_type" name="health_type" placeholder="Medicine, appointment, hydration, etc.">
+
+                <label for="dosage">Dosage</label>
+                <input type="text" id="dosage" name="dosage" placeholder="Example: 1 pill">
+
+                <label for="doctor_name">Doctor Name</label>
+                <input type="text" id="doctor_name" name="doctor_name" placeholder="Optional">
+            </div>
+
+            <div id="fitness-fields" class="extra-fields">
+                <h2>Fitness Details</h2>
+
+                <label for="fitness_activity">Activity</label>
+                <input type="text" id="fitness_activity" name="fitness_activity" placeholder="Running, lifting, walking, etc.">
+
+                <label for="fitness_duration">Duration</label>
+                <input type="text" id="fitness_duration" name="fitness_duration" placeholder="Example: 30 minutes">
+
+                <label for="fitness_goal">Goal</label>
+                <input type="text" id="fitness_goal" name="fitness_goal" placeholder="Example: Cardio, strength, weight loss">
+            </div>
+
+            <div id="work-fields" class="extra-fields">
+                <h2>Work Details</h2>
+
+                <label for="work_task_type">Task Type</label>
+                <input type="text" id="work_task_type" name="work_task_type" placeholder="Meeting, deadline, assignment, etc.">
+
+                <label for="work_deadline">Deadline</label>
+                <input type="date" id="work_deadline" name="work_deadline">
+
+                <label for="work_notes">Work Notes</label>
+                <textarea id="work_notes" name="work_notes" placeholder="Extra work details"></textarea>
+            </div>
+
+            <div id="relationships-fields" class="extra-fields">
+                <h2>Relationship Details</h2>
+
+                <label for="relationship_person">Person Name</label>
+                <input type="text" id="relationship_person" name="relationship_person" placeholder="Example: Mom, friend, coworker">
+
+                <label for="relationship_occasion">Occasion</label>
+                <input type="text" id="relationship_occasion" name="relationship_occasion" placeholder="Birthday, check-in, plans, etc.">
+
+                <label for="relationship_follow_up">Follow Up</label>
+                <input type="text" id="relationship_follow_up" name="relationship_follow_up" placeholder="Call, text, email, visit">
+            </div>
+
+            <div id="general-fields" class="extra-fields">
+                <h2>General Details</h2>
+
+                <label for="custom_field">Custom Detail</label>
+                <input type="text" id="custom_field" name="custom_field" placeholder="Any extra detail">
+            </div>
+
+            <div class="button-group">
+                <button type="submit" class="btn">Save Reminder</button>
+                <a href="/" class="btn">Back to Home</a>
+            </div>
+        </form>
     </div>
+    <script src="{{ url_for('static', filename='scripts/reminder_form.js') }}"></script>
+
 </body>
 </html>

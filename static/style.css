@@ -52,3 +52,59 @@ section {
 .btn:hover {
     background-color: #0056b3;
 }
+
+
+form {
+    text-align: left;
+    margin-top: 25px;
+}
+
+label {
+    display: block;
+    margin-top: 15px;
+    color: #333;
+    font-weight: bold;
+}
+
+input,
+select,
+textarea {
+    width: 100%;
+    padding: 10px;
+    margin-top: 6px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 15px;
+    box-sizing: border-box;
+}
+
+textarea {
+    min-height: 90px;
+    resize: vertical;
+}
+
+.extra-fields {
+    margin-top: 25px;
+    padding: 15px;
+    background-color: #f8f8f8;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+}
+
+button.btn {
+    border: none;
+    cursor: pointer;
+}
+
+.reminder-card {
+    text-align: left;
+    background-color: #f8f8f8;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 15px;
+    margin-top: 20px;
+}
+
+.reminder-card h2 {
+    margin-top: 0;
+}
