@@ -20,7 +20,13 @@ function getDeviceId() {
     return deviceId;
 }
 
-function goToReminders() {
-    const deviceId = getDeviceId();
-    window.location.href = "/reminders?device_id=" + encodeURIComponent(deviceId);
+function makeSureHomeHasDeviceId() {
+    const params = new URLSearchParams(window.location.search);
+
+    if (!params.has("device_id")) {
+        const deviceId = getDeviceId();
+        window.location.href = "/?device_id=" + encodeURIComponent(deviceId);
+    }
 }
+
+window.onload = makeSureHomeHasDeviceId;

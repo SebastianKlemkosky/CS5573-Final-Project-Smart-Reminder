@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Reminder - Smart Reminder</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+    <div class="container">
+        <h1>Edit Reminder</h1>
+
+        <form method="POST" action="/edit/{{ reminder['id'] }}">
+            <input type="hidden" name="device_id" value="{{ device_id }}">
+
+            <p><strong>Reminder Type:</strong> {{ reminder["form_type"] }}</p>
+
+            <label for="title">Reminder Title</label>
+            <input type="text" id="title" name="title" value="{{ reminder['title'] }}" required>
+
+            <label for="description">Description</label>
+            <textarea id="description" name="description">{{ reminder['description'] }}</textarea>
+
+            <label for="reminder_date">Date</label>
+            <input type="date" id="reminder_date" name="reminder_date" value="{{ reminder['reminder_date'] }}">
+
+            <label for="reminder_time">Time</label>
+            <input type="time" id="reminder_time" name="reminder_time" value="{{ reminder['reminder_time'] }}">
+
+            <label for="priority">Priority</label>
+            <select id="priority" name="priority">
+                <option value="Low" {% if reminder['priority'] == 'Low' %}selected{% endif %}>Low</option>
+                <option value="Medium" {% if reminder['priority'] == 'Medium' %}selected{% endif %}>Medium</option>
+                <option value="High" {% if reminder['priority'] == 'High' %}selected{% endif %}>High</option>
+            </select>
+
+            <label for="status">Status</label>
+            <select id="status" name="status">
+                <option value="Pending" {% if reminder['status'] == 'Pending' %}selected{% endif %}>Pending</option>
+                <option value="Completed" {% if reminder['status'] == 'Completed' %}selected{% endif %}>Completed</option>
+            </select>
+
+            {% if reminder["form_type"] == "health" %}
+                <div class="extra-fields">
+                    <h2>Health Details</h2>
+
+                    <label for="health_type">Health Reminder Type</label>
+                    <input type="text" id="health_type" name="health_type" value="{{ reminder['health_type'] }}">
+
+                    <label for="dosage">Dosage</label>
+                    <input type="text" id="dosage" name="dosage" value="{{ reminder['dosage'] }}">
+
+                    <label for="doctor_name">Doctor Name</label>
+                    <input type="text" id="doctor_name" name="doctor_name" value="{{ reminder['doctor_name'] }}">
+                </div>
+            {% endif %}
+
+            {% if reminder["form_type"] == "fitness" %}
+                <div class="extra-fields">
+                    <h2>Fitness Details</h2>
+
+                    <label for="fitness_activity">Activity</label>
+                    <input type="text" id="fitness_activity" name="fitness_activity" value="{{ reminder['fitness_activity'] }}">
+
+                    <label for="fitness_duration">Duration</label>
+                    <input type="text" id="fitness_duration" name="fitness_duration" value="{{ reminder['fitness_duration'] }}">
+
+                    <label for="fitness_goal">Goal</label>
+                    <input type="text" id="fitness_goal" name="fitness_goal" value="{{ reminder['fitness_goal'] }}">
+                </div>
+            {% endif %}
+
+            {% if reminder["form_type"] == "work" %}
+                <div class="extra-fields">
+                    <h2>Work Details</h2>
+
+                    <label for="work_task_type">Task Type</label>
+                    <input type="text" id="work_task_type" name="work_task_type" value="{{ reminder['work_task_type'] }}">
+
+                    <label for="work_deadline">Deadline</label>
+                    <input type="date" id="work_deadline" name="work_deadline" value="{{ reminder['work_deadline'] }}">
+
+                    <label for="work_notes">Work Notes</label>
+                    <textarea id="work_notes" name="work_notes">{{ reminder['work_notes'] }}</textarea>
+                </div>
+            {% endif %}
+
+            {% if reminder["form_type"] == "relationships" %}
+                <div class="extra-fields">
+                    <h2>Relationship Details</h2>
+
+                    <label for="relationship_person">Person Name</label>
+                    <input type="text" id="relationship_person" name="relationship_person" value="{{ reminder['relationship_person'] }}">
+
+                    <label for="relationship_occasion">Occasion</label>
+                    <input type="text" id="relationship_occasion" name="relationship_occasion" value="{{ reminder['relationship_occasion'] }}">
+
+                    <label for="relationship_follow_up">Follow Up</label>
+                    <input type="text" id="relationship_follow_up" name="relationship_follow_up" value="{{ reminder['relationship_follow_up'] }}">
+                </div>
+            {% endif %}
+
+            {% if reminder["form_type"] == "general" %}
+                <div class="extra-fields">
+                    <h2>General Details</h2>
+
+                    <label for="custom_field">Custom Detail</label>
+                    <input type="text" id="custom_field" name="custom_field" value="{{ reminder['custom_field'] }}">
+                </div>
+            {% endif %}
+
+            <div class="button-group">
+                <button type="submit" class="btn">Save Changes</button>
+                <a href="/reminder/{{ reminder['id'] }}?device_id={{ device_id }}" class="btn">Cancel</a>
+            </div>
+        </form>
+    </div>
+</body>
+</html>

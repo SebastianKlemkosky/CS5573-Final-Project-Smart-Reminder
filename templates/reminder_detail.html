@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reminder Details - Smart Reminder</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+    <div class="container">
+        <h1>Reminder Details</h1>
+
+        <div class="reminder-card">
+            <h2>{{ reminder["title"] }}</h2>
+
+            <p><strong>Type:</strong> {{ reminder["form_type"] }}</p>
+            <p><strong>Description:</strong> {{ reminder["description"] }}</p>
+            <p><strong>Date:</strong> {{ reminder["reminder_date"] }}</p>
+            <p><strong>Time:</strong> {{ reminder["reminder_time"] }}</p>
+            <p><strong>Priority:</strong> {{ reminder["priority"] }}</p>
+            <p><strong>Status:</strong> {{ reminder["status"] }}</p>
+
+            {% if reminder["form_type"] == "health" %}
+                <p><strong>Health Type:</strong> {{ reminder["health_type"] }}</p>
+                <p><strong>Dosage:</strong> {{ reminder["dosage"] }}</p>
+                <p><strong>Doctor Name:</strong> {{ reminder["doctor_name"] }}</p>
+            {% endif %}
+
+            {% if reminder["form_type"] == "fitness" %}
+                <p><strong>Activity:</strong> {{ reminder["fitness_activity"] }}</p>
+                <p><strong>Duration:</strong> {{ reminder["fitness_duration"] }}</p>
+                <p><strong>Goal:</strong> {{ reminder["fitness_goal"] }}</p>
+            {% endif %}
+
+            {% if reminder["form_type"] == "work" %}
+                <p><strong>Task Type:</strong> {{ reminder["work_task_type"] }}</p>
+                <p><strong>Deadline:</strong> {{ reminder["work_deadline"] }}</p>
+                <p><strong>Work Notes:</strong> {{ reminder["work_notes"] }}</p>
+            {% endif %}
+
+            {% if reminder["form_type"] == "relationships" %}
+                <p><strong>Person:</strong> {{ reminder["relationship_person"] }}</p>
+                <p><strong>Occasion:</strong> {{ reminder["relationship_occasion"] }}</p>
+                <p><strong>Follow Up:</strong> {{ reminder["relationship_follow_up"] }}</p>
+            {% endif %}
+
+            {% if reminder["form_type"] == "general" %}
+                <p><strong>Custom Detail:</strong> {{ reminder["custom_field"] }}</p>
+            {% endif %}
+        </div>
+
+        <div class="button-group">
+            <a href="/?device_id={{ device_id }}" class="btn">Back to Home</a>
+            <a href="/edit/{{ reminder['id'] }}?device_id={{ device_id }}" class="btn">Edit</a>
+
+            {% if reminder["status"] != "Completed" %}
+                <form method="POST" action="/complete/{{ reminder['id'] }}" style="display:inline;">
+                    <input type="hidden" name="device_id" value="{{ device_id }}">
+                    <button type="submit" class="btn">Mark Complete</button>
+                </form>
+            {% endif %}
+
+            <form method="POST" action="/delete/{{ reminder['id'] }}" style="display:inline;">
+                <input type="hidden" name="device_id" value="{{ device_id }}">
+                <button type="submit" class="btn">Delete</button>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

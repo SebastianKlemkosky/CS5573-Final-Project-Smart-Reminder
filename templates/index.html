@@ -18,9 +18,48 @@
 
         <div class="button-group">
             <a href="/add" class="btn">Add Reminder</a>
-            <a href="#" class="btn" onclick="goToReminders()">View Reminders</a>
             <a href="/about" class="btn">About</a>
         </div>
+
+        <h2>Your Reminders</h2>
+
+        {% if reminders %}
+            <div class="reminder-grid">
+                {% for reminder in reminders %}
+                    <div class="reminder-card-small">
+                        <h2>{{ reminder["title"] }}</h2>
+
+                        <p><strong>Type:</strong> {{ reminder["form_type"] }}</p>
+
+                        <p>
+                            <strong>Description:</strong>
+                            {% if reminder["description"] %}
+                                {{ reminder["description"][:100] }}{% if reminder["description"]|length > 100 %}...{% endif %}
+                            {% else %}
+                                No description
+                            {% endif %}
+                        </p>
+
+                        <p><strong>Date:</strong> {{ reminder["reminder_date"] }}</p>
+                        <p><strong>Priority:</strong> {{ reminder["priority"] }}</p>
+                        <p><strong>Status:</strong> {{ reminder["status"] }}</p>
+
+                        <div class="button-group">
+                            <a href="/reminder/{{ reminder['id'] }}?device_id={{ device_id }}" class="btn">View Reminder</a>
+
+                            {% if reminder["status"] != "Completed" %}
+                                <form method="POST" action="/complete/{{ reminder['id'] }}" style="display:inline;">
+                                    <input type="hidden" name="device_id" value="{{ device_id }}">
+                                    <button type="submit" class="btn">Complete</button>
+                                </form>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p>No reminders have been added yet.</p>
+        {% endif %}
     </div>
 
     <script src="{{ url_for('static', filename='scripts/navigation.js') }}"></script>

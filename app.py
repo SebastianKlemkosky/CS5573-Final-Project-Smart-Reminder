@@ -47,10 +47,28 @@ def create_database():
     connection.commit()
     connection.close()
 
-# Displays the home page.
+# Displays the home page with a dashboard of reminders for the current browser/device.
 @app.route("/")
 def home():
-    return render_template("index.html")
+    device_id = request.args.get("device_id")
+
+    connection = get_db_connection()
+
+    if device_id:
+        reminders = connection.execute(
+            "SELECT * FROM reminders WHERE device_id = ? ORDER BY created_at DESC",
+            (device_id,)
+        ).fetchall()
+    else:
+        reminders = []
+
+    connection.close()
+
+    return render_template(
+        "index.html",
+        reminders=reminders,
+        device_id=device_id
+    )
 
 # Displays the about page with project information.
 @app.route("/about")
@@ -110,7 +128,7 @@ def add_reminder():
         connection.commit()
         connection.close()
 
-        return redirect(url_for("view_reminders", device_id=device_id))
+        return redirect(url_for("home", device_id=device_id))
 
     return render_template("add_reminder.html")
 
@@ -131,8 +149,137 @@ def view_reminders():
 
     connection.close()
 
-    return render_template("view_reminders.html", reminders=reminders)
+    return render_template(
+    "view_reminders.html",
+    reminders=reminders,
+    device_id=device_id
+)
 
+# Marks a reminder as completed and returns the user to their reminder list.
+@app.route("/complete/<int:reminder_id>", methods=["POST"])
+def complete_reminder(reminder_id):
+    device_id = request.form.get("device_id")
+
+    connection = get_db_connection()
+    connection.execute(
+        "UPDATE reminders SET status = ? WHERE id = ? AND device_id = ?",
+        ("Completed", reminder_id, device_id)
+    )
+    connection.commit()
+    connection.close()
+
+    return redirect(url_for("home", device_id=device_id))
+
+# Deletes a reminder and returns the user to their reminder list.
+@app.route("/delete/<int:reminder_id>", methods=["POST"])
+def delete_reminder(reminder_id):
+    device_id = request.form.get("device_id")
+
+    connection = get_db_connection()
+    connection.execute(
+        "DELETE FROM reminders WHERE id = ? AND device_id = ?",
+        (reminder_id, device_id)
+    )
+    connection.commit()
+    connection.close()
+
+    return redirect(url_for("home", device_id=device_id))
+
+# Displays an existing reminder and updates it after the edit form is submitted.
+@app.route("/edit/<int:reminder_id>", methods=["GET", "POST"])
+def edit_reminder(reminder_id):
+    device_id = request.args.get("device_id") or request.form.get("device_id")
+
+    connection = get_db_connection()
+
+    if request.method == "POST":
+        title = request.form.get("title")
+        description = request.form.get("description")
+        reminder_date = request.form.get("reminder_date")
+        reminder_time = request.form.get("reminder_time")
+        priority = request.form.get("priority")
+        status = request.form.get("status")
+
+        health_type = request.form.get("health_type")
+        dosage = request.form.get("dosage")
+        doctor_name = request.form.get("doctor_name")
+
+        fitness_activity = request.form.get("fitness_activity")
+        fitness_duration = request.form.get("fitness_duration")
+        fitness_goal = request.form.get("fitness_goal")
+
+        work_task_type = request.form.get("work_task_type")
+        work_deadline = request.form.get("work_deadline")
+        work_notes = request.form.get("work_notes")
+
+        relationship_person = request.form.get("relationship_person")
+        relationship_occasion = request.form.get("relationship_occasion")
+        relationship_follow_up = request.form.get("relationship_follow_up")
+
+        custom_field = request.form.get("custom_field")
+
+        connection.execute("""
+            UPDATE reminders
+            SET title = ?, description = ?, reminder_date = ?, reminder_time = ?,
+                priority = ?, status = ?,
+                health_type = ?, dosage = ?, doctor_name = ?,
+                fitness_activity = ?, fitness_duration = ?, fitness_goal = ?,
+                work_task_type = ?, work_deadline = ?, work_notes = ?,
+                relationship_person = ?, relationship_occasion = ?, relationship_follow_up = ?,
+                custom_field = ?
+            WHERE id = ? AND device_id = ?
+        """, (
+            title, description, reminder_date, reminder_time,
+            priority, status,
+            health_type, dosage, doctor_name,
+            fitness_activity, fitness_duration, fitness_goal,
+            work_task_type, work_deadline, work_notes,
+            relationship_person, relationship_occasion, relationship_follow_up,
+            custom_field,
+            reminder_id, device_id
+        ))
+
+        connection.commit()
+        connection.close()
+
+        return redirect(url_for("home", device_id=device_id))
+
+    reminder = connection.execute(
+        "SELECT * FROM reminders WHERE id = ? AND device_id = ?",
+        (reminder_id, device_id)
+    ).fetchone()
+
+    connection.close()
+
+    if reminder is None:
+        return redirect(url_for("home", device_id=device_id))
+
+    return render_template(
+        "edit_reminder.html",
+        reminder=reminder,
+        device_id=device_id
+    )
+
+# Displays one reminder with all saved details.
+@app.route("/reminder/<int:reminder_id>")
+def reminder_detail(reminder_id):
+    device_id = request.args.get("device_id")
+
+    connection = get_db_connection()
+    reminder = connection.execute(
+        "SELECT * FROM reminders WHERE id = ? AND device_id = ?",
+        (reminder_id, device_id)
+    ).fetchone()
+    connection.close()
+
+    if reminder is None:
+        return redirect(url_for("home", device_id=device_id))
+
+    return render_template(
+        "reminder_detail.html",
+        reminder=reminder,
+        device_id=device_id
+    )
 
 if __name__ == "__main__":
     create_database()
