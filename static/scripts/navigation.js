@@ -25,7 +25,8 @@ function makeSureHomeHasDeviceId() {
 
     if (!params.has("device_id")) {
         const deviceId = getDeviceId();
-        window.location.href = "/?device_id=" + encodeURIComponent(deviceId);
+        params.set("device_id", deviceId);
+        window.location.href = window.location.pathname + "?" + params.toString();
     }
 }
 

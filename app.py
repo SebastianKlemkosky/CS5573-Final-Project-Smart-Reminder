@@ -3,6 +3,7 @@ import sqlite3
 from werkzeug.security import generate_password_hash, check_password_hash
 from functools import wraps
 import os
+from datetime import datetime, timedelta
 
 app = Flask(__name__)
 
@@ -146,23 +147,60 @@ def logout():
 @app.route("/")
 def home():
     device_id = get_current_device_id()
-
     connection = get_db_connection()
+    status_filter = request.args.get("filter", "all")
+    category_filter = request.args.get("category", "all")
+
+    query = "SELECT * FROM reminders WHERE device_id = ?"
+    params = [device_id]
+
+    if status_filter == "completed":
+        query += " AND status = ?"
+        params.append("Completed")
+    elif status_filter == "pending":
+        query += " AND status != ?"
+        params.append("Completed")
+
+    if category_filter != "all":
+        query += " AND form_type = ?"
+        params.append(category_filter)
+
+    query += " ORDER BY created_at DESC"
 
     if device_id:
-        reminders = connection.execute(
-            "SELECT * FROM reminders WHERE device_id = ? ORDER BY created_at DESC",
-            (device_id,)
-        ).fetchall()
+        reminders = connection.execute(query, params).fetchall()
     else:
         reminders = []
 
     connection.close()
 
+    now = datetime.now()
+    soon = now + timedelta(hours=24)
+
+    due_soon = []
+    overdue = []
+
+    for reminder in reminders:
+        if reminder["reminder_date"] and reminder["status"] != "Completed":
+            try:
+                reminder_time = datetime.fromisoformat(reminder["reminder_date"])
+
+                if now <= reminder_time <= soon:
+                    due_soon.append(reminder)
+                elif reminder_time < now:
+                    overdue.append(reminder)
+
+            except ValueError:
+                pass
+
     return render_template(
         "index.html",
         reminders=reminders,
-        device_id=device_id
+        device_id=device_id,
+        status_filter=status_filter,
+        category_filter=category_filter,
+        due_soon=due_soon,
+        overdue=overdue
     )
 
 # Displays the about page with project information.
@@ -228,34 +266,13 @@ def add_reminder():
 
     return render_template("add_reminder.html")
 
-# Displays reminders that belong to the current browser/device.
-@app.route("/reminders")
-def view_reminders():
-    device_id = get_current_device_id()
-
-    connection = get_db_connection()
-
-    if device_id:
-        reminders = connection.execute(
-            "SELECT * FROM reminders WHERE device_id = ? ORDER BY created_at DESC",
-            (device_id,)
-        ).fetchall()
-    else:
-        reminders = []
-
-    connection.close()
-
-    return render_template(
-    "view_reminders.html",
-    reminders=reminders,
-    device_id=device_id
-)
-
 # Marks a reminder as completed and returns the user to their reminder list.
 @app.route("/complete/<int:reminder_id>", methods=["POST"])
 @login_required
 def complete_reminder(reminder_id):
     device_id = get_current_device_id()
+    status_filter = request.args.get("filter", "all")
+    category_filter = request.args.get("category", "all")
 
     connection = get_db_connection()
     connection.execute(
@@ -265,7 +282,7 @@ def complete_reminder(reminder_id):
     connection.commit()
     connection.close()
 
-    return redirect(url_for("home"))
+    return redirect(url_for("home", filter=status_filter, category=category_filter))
 
 # Deletes a reminder and returns the user to their reminder list.
 @app.route("/delete/<int:reminder_id>", methods=["POST"])

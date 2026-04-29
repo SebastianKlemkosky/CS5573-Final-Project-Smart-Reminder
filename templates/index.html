@@ -34,13 +34,61 @@
 
         <h2>Your Reminders</h2>
 
+        <div class="button-group">
+            <a href="{{ url_for('home', filter='all', category=category_filter) }}" class="btn {% if status_filter == 'all' %}active-filter{% endif %}">All</a>
+
+            <a href="{{ url_for('home', filter='pending', category=category_filter) }}" class="btn {% if status_filter == 'pending' %}active-filter{% endif %}">Pending</a>
+
+            <a href="{{ url_for('home', filter='completed', category=category_filter) }}" class="btn {% if status_filter == 'completed' %}active-filter{% endif %}">Completed</a>
+        </div>
+
+        
+        {% if due_soon %}
+            <div class="notification">
+                <strong>Reminder Alert:</strong>
+                You have {{ due_soon|length }} reminder(s) due within the next 24 hours.
+
+                {% for reminder in due_soon %}
+                    <p>⚠️ {{ reminder["title"] }} is due soon: {{ reminder["reminder_time"] }}</p>
+                {% endfor %}
+
+                {% for reminder in overdue %}
+                    <p>🚨  {{ reminder["title"] }} is overdue: {{ reminder["reminder_time"] }}</p>
+                {% endfor %}
+            </div>
+
+            <!-- <script>
+                alert("You have {{ due_soon|length }} reminder(s) due soon!");
+            </script>   -->
+        {% endif %} 
+        <form method="GET" action="{{ url_for('home') }}" class="filter-form">
+            <input type="hidden" name="filter" value="{{ status_filter }}">
+
+            <label for="category">Category:</label>
+
+            <select name="category" id="category" onchange="this.form.submit()">
+                <option value="all" {% if category_filter == "all" %}selected{% endif %}>All Categories</option>
+                <option value="Health" {% if category_filter == "Health" %}selected{% endif %}>Health</option>
+                <option value="Fitness" {% if category_filter == "Fitness" %}selected{% endif %}>Fitness</option>
+                <option value="Work" {% if category_filter == "Work" %}selected{% endif %}>Work</option>
+                <option value="Relationship" {% if category_filter == "Relationship" %}selected{% endif %}>Relationship</option>
+                <option value="Custom" {% if category_filter == "Custom" %}selected{% endif %}>Custom</option>
+            </select>
+        </form>
         {% if reminders %}
             <div class="reminder-grid">
                 {% for reminder in reminders %}
-                    <div class="reminder-card-small">
+                    <div class="reminder-card-small 
+                        {% if reminder['status'] == 'Completed' %}
+                            completed-card
+                        {% else %}
+                            priority-{{ reminder['priority']|lower }}
+                        {% endif %}
+                    ">
                         <h2>{{ reminder["title"] }}</h2>
 
-                        <p><strong>Type:</strong> {{ reminder["form_type"] }}</p>
+                        <span class="badge">{{ reminder["form_type"] }}</span>
+
 
                         <p>
                             <strong>Description:</strong>
@@ -59,7 +107,7 @@
                             <a href="/reminder/{{ reminder['id'] }}?device_id={{ device_id }}" class="btn">View Reminder</a>
 
                             {% if reminder["status"] != "Completed" %}
-                                <form method="POST" action="/complete/{{ reminder['id'] }}" style="display:inline;">
+                               <form method="POST" action="/complete/{{ reminder['id'] }}?filter={{ status_filter }}" style="display:inline;">
                                     <input type="hidden" name="device_id" value="{{ device_id }}">
                                     <button type="submit" class="btn">Complete</button>
                                 </form>

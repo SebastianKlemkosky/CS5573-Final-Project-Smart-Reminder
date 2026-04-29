@@ -133,3 +133,48 @@ button.btn {
     font-size: 15px;
     line-height: 1.4;
 }
+
+.priority-high {
+    border-left: 6px solid red;
+}
+
+.priority-medium {
+    border-left: 6px solid orange;
+}
+
+.priority-low {
+    border-left: 6px solid blue;
+}
+
+.completed-card {
+    border-left: 6px solid green;
+    background-color: #e6f4ea;
+}
+
+.active-filter {
+    background-color: #333;
+    color: white;
+}
+
+.badge {
+    display: inline-block;
+    background-color: #e9ecef;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+}
+
+.filter-form {
+    margin: 15px 0;
+}
+
+.filter-form label {
+    font-weight: bold;
+    margin-right: 8px;
+}
+
+.filter-form select {
+    padding: 8px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+}
