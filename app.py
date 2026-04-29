@@ -1,9 +1,15 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, session, flash
 import sqlite3
+from werkzeug.security import generate_password_hash, check_password_hash
+from functools import wraps
+import os
 
 app = Flask(__name__)
 
-DATABASE_NAME = "smart_reminder.db"
+app.secret_key = "60f98ce0bd038fa832506f52146fbed5fb46096b9295dc49276d5232a66a0513"
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DATABASE_NAME = os.path.join(BASE_DIR, "smart_reminder.db")
 
 # Opens a connection to the SQLite database and returns rows like dictionaries.
 def get_db_connection():
@@ -44,13 +50,102 @@ def create_database():
         )
     """)
 
+    # Users table for simple auth
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT UNIQUE NOT NULL,
+            password_hash TEXT NOT NULL,
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+
     connection.commit()
     connection.close()
+
+
+# ---------- Authentication helpers and routes ----------
+def get_current_device_id():
+    # prefer logged-in user's device id (username), then query/form param
+    return session.get("device_id") or session.get("username") or request.args.get("device_id") or request.form.get("device_id")
+
+def get_user_by_username(username):
+    conn = get_db_connection()
+    user = conn.execute("SELECT * FROM users WHERE username = ?", (username,)).fetchone()
+    conn.close()
+    return user
+
+def create_user(username, password):
+    password_hash = generate_password_hash(password)
+    conn = get_db_connection()
+    try:
+        conn.execute("INSERT INTO users (username, password_hash) VALUES (?, ?)", (username, password_hash))
+        conn.commit()
+    except sqlite3.IntegrityError:
+        conn.close()
+        return False
+
+    conn.close()
+    return True
+
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not session.get("username"):
+            return redirect(url_for("login", next=request.path))
+        return f(*args, **kwargs)
+    return decorated_function
+
+
+@app.route("/register", methods=["GET", "POST"])
+def register():
+    if request.method == "POST":
+        username = request.form.get("username")
+        password = request.form.get("password")
+        if not username or not password:
+            flash("Username and password required.")
+            return render_template("register.html")
+
+        success = create_user(username, password)
+        if not success:
+            flash("Username already taken.")
+            return render_template("register.html")
+
+        session["username"] = username
+        session["device_id"] = username
+        return redirect(url_for("home"))
+
+    return render_template("register.html")
+
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    if request.method == "POST":
+        username = request.form.get("username")
+        password = request.form.get("password")
+        user = get_user_by_username(username)
+        if user and check_password_hash(user["password_hash"], password):
+            session["username"] = username
+            session["device_id"] = username
+            next_url = request.args.get("next") or url_for("home")
+            return redirect(next_url)
+        flash("Invalid username or password.")
+
+    return render_template("login.html")
+
+
+@app.route("/logout")
+def logout():
+    session.pop("username", None)
+    session.pop("device_id", None)
+    return redirect(url_for("home"))
+
+# ---------- End auth helpers ----------
 
 # Displays the home page with a dashboard of reminders for the current browser/device.
 @app.route("/")
 def home():
-    device_id = request.args.get("device_id")
+    device_id = get_current_device_id()
 
     connection = get_db_connection()
 
@@ -77,9 +172,10 @@ def about():
 
 # Displays the reminder form and saves submitted reminders to the database.
 @app.route("/add", methods=["GET", "POST"])
+@login_required
 def add_reminder():
     if request.method == "POST":
-        device_id = request.form.get("device_id")
+        device_id = get_current_device_id()
         form_type = request.form.get("form_type")
         title = request.form.get("title")
         description = request.form.get("description")
@@ -128,14 +224,14 @@ def add_reminder():
         connection.commit()
         connection.close()
 
-        return redirect(url_for("home", device_id=device_id))
+        return redirect(url_for("home"))
 
     return render_template("add_reminder.html")
 
 # Displays reminders that belong to the current browser/device.
 @app.route("/reminders")
 def view_reminders():
-    device_id = request.args.get("device_id")
+    device_id = get_current_device_id()
 
     connection = get_db_connection()
 
@@ -157,8 +253,9 @@ def view_reminders():
 
 # Marks a reminder as completed and returns the user to their reminder list.
 @app.route("/complete/<int:reminder_id>", methods=["POST"])
+@login_required
 def complete_reminder(reminder_id):
-    device_id = request.form.get("device_id")
+    device_id = get_current_device_id()
 
     connection = get_db_connection()
     connection.execute(
@@ -168,12 +265,13 @@ def complete_reminder(reminder_id):
     connection.commit()
     connection.close()
 
-    return redirect(url_for("home", device_id=device_id))
+    return redirect(url_for("home"))
 
 # Deletes a reminder and returns the user to their reminder list.
 @app.route("/delete/<int:reminder_id>", methods=["POST"])
+@login_required
 def delete_reminder(reminder_id):
-    device_id = request.form.get("device_id")
+    device_id = get_current_device_id()
 
     connection = get_db_connection()
     connection.execute(
@@ -183,12 +281,13 @@ def delete_reminder(reminder_id):
     connection.commit()
     connection.close()
 
-    return redirect(url_for("home", device_id=device_id))
+    return redirect(url_for("home"))
 
 # Displays an existing reminder and updates it after the edit form is submitted.
 @app.route("/edit/<int:reminder_id>", methods=["GET", "POST"])
+@login_required
 def edit_reminder(reminder_id):
-    device_id = request.args.get("device_id") or request.form.get("device_id")
+    device_id = get_current_device_id()
 
     connection = get_db_connection()
 
@@ -242,7 +341,7 @@ def edit_reminder(reminder_id):
         connection.commit()
         connection.close()
 
-        return redirect(url_for("home", device_id=device_id))
+        return redirect(url_for("home"))
 
     reminder = connection.execute(
         "SELECT * FROM reminders WHERE id = ? AND device_id = ?",
@@ -252,7 +351,7 @@ def edit_reminder(reminder_id):
     connection.close()
 
     if reminder is None:
-        return redirect(url_for("home", device_id=device_id))
+        return redirect(url_for("home"))
 
     return render_template(
         "edit_reminder.html",
@@ -263,7 +362,7 @@ def edit_reminder(reminder_id):
 # Displays one reminder with all saved details.
 @app.route("/reminder/<int:reminder_id>")
 def reminder_detail(reminder_id):
-    device_id = request.args.get("device_id")
+    device_id = get_current_device_id()
 
     connection = get_db_connection()
     reminder = connection.execute(
@@ -273,7 +372,7 @@ def reminder_detail(reminder_id):
     connection.close()
 
     if reminder is None:
-        return redirect(url_for("home", device_id=device_id))
+        return redirect(url_for("home"))
 
     return render_template(
         "reminder_detail.html",

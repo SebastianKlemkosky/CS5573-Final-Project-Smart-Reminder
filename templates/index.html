@@ -10,6 +10,9 @@
 <body>
     <div class="container">
         <h1>Smart Reminder</h1>
+        {% if session["username"] %}
+            <p>Logged in as: {{ session["username"] }}</p>
+        {% endif %}
 
         <p>
             A cloud-based reminder web app for health, fitness,
@@ -17,8 +20,16 @@
         </p>
 
         <div class="button-group">
-            <a href="/add" class="btn">Add Reminder</a>
+            {% if session["username"] %}
+                <a href="/add" class="btn">Add Reminder</a>
+            {% else %}
+                <a href="/login" class="btn">Login</a>
+                <a href="/register" class="btn">Register</a>
+            {% endif %}
             <a href="/about" class="btn">About</a>
+            {% if session["username"] %}
+                <a href="/logout" class="btn">Logout</a>
+            {% endif %}
         </div>
 
         <h2>Your Reminders</h2>
