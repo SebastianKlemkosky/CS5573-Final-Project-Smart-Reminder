@@ -34,12 +34,32 @@
 
         <h2>Your Reminders</h2>
 
+        <!-- Search Bar -->
+        <div class="search-container">
+            <form method="GET" action="{{ url_for('home') }}" style="display: flex; gap: 10px; flex: 1;">
+                <input type="hidden" name="filter" value="{{ status_filter }}">
+                <input type="hidden" name="category" value="{{ category_filter }}">
+                <input type="hidden" name="sort" value="{{ sort }}">
+                <input
+                    type="text"
+                    name="search"
+                    placeholder="Search by title or description..."
+                    value="{{ search_query }}"
+                    class="search-input"
+                >
+                <button type="submit" class="btn btn-search">Search</button>
+                <a href="{{ url_for('home', filter=status_filter, category=category_filter) }}" class="btn btn-clear">Clear</a>
+            </form>
+        </div>
+
+        <p id="search-info" class="search-info" style="display:none;"></p>
+
         <div class="button-group">
-            <a href="{{ url_for('home', filter='all', category=category_filter) }}" class="btn {% if status_filter == 'all' %}active-filter{% endif %}">All</a>
+            <a href="{{ url_for('home', filter='all', category=category_filter, search=search_query, sort=sort) }}" class="btn {% if status_filter == 'all' %}active-filter{% endif %}">All</a>
 
-            <a href="{{ url_for('home', filter='pending', category=category_filter) }}" class="btn {% if status_filter == 'pending' %}active-filter{% endif %}">Pending</a>
+            <a href="{{ url_for('home', filter='pending', category=category_filter, search=search_query, sort=sort) }}" class="btn {% if status_filter == 'pending' %}active-filter{% endif %}">Pending</a>
 
-            <a href="{{ url_for('home', filter='completed', category=category_filter) }}" class="btn {% if status_filter == 'completed' %}active-filter{% endif %}">Completed</a>
+            <a href="{{ url_for('home', filter='completed', category=category_filter, search=search_query, sort=sort) }}" class="btn {% if status_filter == 'completed' %}active-filter{% endif %}">Completed</a>
         </div>
 
         
@@ -63,9 +83,9 @@
         {% endif %} 
         <form method="GET" action="{{ url_for('home') }}" class="filter-form">
             <input type="hidden" name="filter" value="{{ status_filter }}">
+            <input type="hidden" name="search" value="{{ search_query }}">
 
             <label for="category">Category:</label>
-
             <select name="category" id="category" onchange="this.form.submit()">
                 <option value="all" {% if category_filter == "all" %}selected{% endif %}>All Categories</option>
                 <option value="Health" {% if category_filter == "Health" %}selected{% endif %}>Health</option>
@@ -74,17 +94,28 @@
                 <option value="Relationship" {% if category_filter == "Relationship" %}selected{% endif %}>Relationship</option>
                 <option value="Custom" {% if category_filter == "Custom" %}selected{% endif %}>Custom</option>
             </select>
+
+            <label for="sort">Sort by:</label>
+            <select name="sort" id="sort" onchange="this.form.submit()">
+                <option value="created_desc" {% if sort == "created_desc" %}selected{% endif %}>Created Date</option>
+                <option value="priority"     {% if sort == "priority"     %}selected{% endif %}>Priority (High → Low)</option>
+                <option value="due_date"     {% if sort == "due_date"     %}selected{% endif %}>Due Date (Soonest First)</option>
+                <option value="alpha"        {% if sort == "alpha"        %}selected{% endif %}>Alphabetical</option>
+            </select>
         </form>
         {% if reminders %}
             <div class="reminder-grid">
                 {% for reminder in reminders %}
-                    <div class="reminder-card-small 
+                    <div class="reminder-card-small
                         {% if reminder['status'] == 'Completed' %}
                             completed-card
                         {% else %}
                             priority-{{ reminder['priority']|lower }}
                         {% endif %}
-                    ">
+                    "
+                    data-title="{{ reminder['title'] | lower }}"
+                    data-desc="{{ (reminder['description'] or '') | lower }}"
+                    >
                         <h2>{{ reminder["title"] }}</h2>
 
                         <span class="badge">{{ reminder["form_type"] }}</span>
@@ -119,8 +150,48 @@
         {% else %}
             <p>No reminders have been added yet.</p>
         {% endif %}
+        <p id="no-search-results" style="display:none;">No reminders match your search.</p>
     </div>
 
     <script src="{{ url_for('static', filename='scripts/navigation.js') }}"></script>
+    <script>
+        (function () {
+            var input = document.querySelector('input[name="search"]');
+            if (!input) return;
+
+            var cards = Array.from(document.querySelectorAll('.reminder-card-small'));
+            var info = document.getElementById('search-info');
+            var noResults = document.getElementById('no-search-results');
+
+            function filterCards() {
+                var query = input.value.toLowerCase().trim();
+                var visible = 0;
+
+                cards.forEach(function (card) {
+                    var match = !query ||
+                        card.dataset.title.includes(query) ||
+                        card.dataset.desc.includes(query);
+                    card.style.display = match ? '' : 'none';
+                    if (match) visible++;
+                });
+
+                if (query) {
+                    info.style.display = '';
+                    info.innerHTML = 'Showing results for "<strong>' + query + '</strong>" (' + visible + ' found)';
+                } else {
+                    info.style.display = 'none';
+                }
+
+                if (noResults) {
+                    noResults.style.display = (cards.length > 0 && visible === 0) ? '' : 'none';
+                }
+            }
+
+            input.addEventListener('input', filterCards);
+
+            // Run on load so a pre-filled search value (from URL) also filters live
+            if (input.value) filterCards();
+        })();
+    </script>
 </body>
 </html>

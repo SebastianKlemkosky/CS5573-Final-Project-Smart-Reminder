@@ -150,6 +150,8 @@ def home():
     connection = get_db_connection()
     status_filter = request.args.get("filter", "all")
     category_filter = request.args.get("category", "all")
+    search_query = request.args.get("search", "").strip()
+    sort = request.args.get("sort", "created_desc")
 
     query = "SELECT * FROM reminders WHERE device_id = ?"
     params = [device_id]
@@ -165,7 +167,18 @@ def home():
         query += " AND form_type = ?"
         params.append(category_filter)
 
-    query += " ORDER BY created_at DESC"
+    if search_query:
+        query += " AND (title LIKE ? OR description LIKE ?)"
+        search_term = f"%{search_query}%"
+        params.extend([search_term, search_term])
+
+    sort_clauses = {
+        "priority":     "CASE WHEN priority='High' THEN 1 WHEN priority='Medium' THEN 2 WHEN priority='Low' THEN 3 ELSE 4 END ASC",
+        "due_date":     "reminder_date ASC NULLS LAST",
+        "alpha":        "title COLLATE NOCASE ASC",
+        "created_desc": "created_at DESC",
+    }
+    query += " ORDER BY " + sort_clauses.get(sort, sort_clauses["created_desc"])
 
     if device_id:
         reminders = connection.execute(query, params).fetchall()
@@ -199,6 +212,8 @@ def home():
         device_id=device_id,
         status_filter=status_filter,
         category_filter=category_filter,
+        search_query=search_query,
+        sort=sort,
         due_soon=due_soon,
         overdue=overdue
     )
