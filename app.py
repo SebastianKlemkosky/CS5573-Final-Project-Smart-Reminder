@@ -164,7 +164,7 @@ def home():
         params.append("Completed")
 
     if category_filter != "all":
-        query += " AND form_type = ?"
+        query += " AND LOWER(form_type) = LOWER(?)"
         params.append(category_filter)
 
     if search_query:
